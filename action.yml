@@ -1,6 +1,14 @@
 name: 'Setup CQtDeployer'
 description: 'Downloads, extracts, and installs CQtDeployer for Linux (x64/ARM) and Windows'
 
+inputs:
+  latest:
+    description: 'Download the latest stable release when "version" is not set. Set this to false only when you provide a specific "version".'
+    default: 'true'
+  version:
+    description: 'Download a specific release tag instead of the latest release, e.g. "v1.6.2365". When set, it takes precedence over "latest".'
+    default: ''
+
 branding:
   icon: 'download'
   color: 'orange'
@@ -13,7 +21,8 @@ runs:
       uses: robinraju/release-downloader@v1
       with:
         repository: 'QuasarApp/CQtDeployer'
-        latest: true
+        latest: ${{ inputs.version == '' && inputs.latest != 'false' }}
+        tag: ${{ inputs.version }}
         fileName: '*_Linux_x86_64.zip'
         extract: true
         out-file-path: ${{ github.workspace }}/cqt
@@ -24,7 +33,8 @@ runs:
       uses: robinraju/release-downloader@v1
       with:
         repository: 'QuasarApp/CQtDeployer'
-        latest: true
+        latest: ${{ inputs.version == '' && inputs.latest != 'false' }}
+        tag: ${{ inputs.version }}
         fileName: '*_Linux_ARM64.zip'
         extract: true
         out-file-path: ${{ github.workspace }}/cqt
@@ -43,7 +53,8 @@ runs:
       uses: robinraju/release-downloader@v1
       with:
         repository: 'QuasarApp/CQtDeployer'
-        latest: true
+        latest: ${{ inputs.version == '' && inputs.latest != 'false' }}
+        tag: ${{ inputs.version }}
         fileName: '*_Windows_AMD64.zip'
         extract: true
         out-file-path: ${{ github.workspace }}/cqt

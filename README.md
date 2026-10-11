@@ -16,6 +16,26 @@ Add the following step to your GitHub Actions workflow file (e.g., `.github/work
 ```
 
 
+## Options
+
+| Option    | Type    | Default   | Description |
+|-----------|---------|-----------|-------------|
+| `latest`  | boolean | `true`    | Download the latest stable release. Only consulted when `version` is not set. |
+| `version` | string  | *(empty)* | Download a specific release tag instead of the latest release, e.g. `v1.6.2365`. When set, it takes precedence over `latest`. |
+
+By default the action downloads the latest stable **CQtDeployer** release. To pin
+a specific release, set the `version` input to the desired release tag:
+
+```yaml
+- name: Install a specific CQtDeployer version
+  uses: QuasarApp/cqtdeployer-install-action@v1.0.0
+  with:
+    version: v1.6.2365
+```
+
+> **Note:** `version` must be the exact GitHub release **tag** (for example
+> `v1.6.2365`). When `version` is set, the `latest` flag is ignored.
+
 ## Full Workflow Example
 Here is a complete example of how to use this action in a matrix build for both Linux and Windows:
 
