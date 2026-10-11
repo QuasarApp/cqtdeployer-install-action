@@ -11,9 +11,12 @@ Add the following step to your GitHub Actions workflow file (e.g., `.github/work
 
 ```yaml
 - name: Install CQtDeployer
-  uses: QuasarApp/cqtdeployer-install-action@v1.0.0
-  
+  uses: QuasarApp/cqtdeployer-install-action@v1.1.0
 ```
+
+By default the step installs the latest stable **CQtDeployer** release.
+Starting with **v1.1.0** the downloaded release can be controlled with the
+`latest` and `version` options (see [Options](#options)).
 
 
 ## Options
@@ -28,7 +31,7 @@ a specific release, set the `version` input to the desired release tag:
 
 ```yaml
 - name: Install a specific CQtDeployer version
-  uses: QuasarApp/cqtdeployer-install-action@v1.0.0
+  uses: QuasarApp/cqtdeployer-install-action@v1.1.0
   with:
     version: v1.6.2365
 ```
@@ -49,6 +52,11 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  # Leave empty to install the latest stable release,
+  # or set an exact release tag (e.g. "v1.6.2365") to pin the version.
+  CQT_VERSION: ""
+
 jobs:
   build:
     strategy:
@@ -60,18 +68,23 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # 1. Install CQtDeployer using this custom action
+      # 1. Install CQtDeployer using this custom action.
+      #    With an empty CQT_VERSION the latest stable release is installed.
+      #    To pin a specific release, set CQT_VERSION to the exact release
+      #    tag (e.g. "v1.6.2365") or pass "version: <tag>" directly.
       - name: Setup CQtDeployer
-        uses: QuasarApp/cqtdeployer-install-action@v1.0.0
+        uses: QuasarApp/cqtdeployer-install-action@v1.1.0
+        with:
+          version: ${{ env.CQT_VERSION }}
 
-      # 3. Run deployment for your Qt Application (Linux)
+      # 2. Run deployment for your Qt Application (Linux)
       - name: Deploy Application (Linux)
         if: runner.os == 'Linux'
         shell: bash
         run: |
           cqtdeployer -bin my_qt_app -qmake /path/to/qt/bin/qmake
 
-      # 4. Run deployment for your Qt Application (Windows)
+      # 3. Run deployment for your Qt Application (Windows)
       - name: Deploy Application (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
