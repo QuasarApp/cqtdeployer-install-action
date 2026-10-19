@@ -84,7 +84,12 @@ runs:
         tag: ${{ inputs.version }}
         fileName: '*_Darwin_arm64.zip'
         extract: true
-        out-file-path: ${{ github.workspace }}/cqt/CQtDeployer
+        # The package is extracted into the "macos" directory because the
+        # macOS runner filesystem is case-insensitive and a directory named
+        # "CQtDeployer" cannot be created alongside the "cqtdeployer"
+        # wrapper file in the cqt/ directory (issue #866 of
+        # QuasarApp/CQtDeployer).
+        out-file-path: ${{ github.workspace }}/cqt/macos
 
     - name: Install CQtDeployer macOS
       # The executable is linked against its dylibs and the QtCore
@@ -97,12 +102,12 @@ runs:
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        pkg_dir="${{ github.workspace }}/cqt/CQtDeployer"
+        pkg_dir="${{ github.workspace }}/cqt/macos"
         chmod +x "${pkg_dir}/CQtDeployer"
         chmod +x "${pkg_dir}/CQtDeployer.sh"
         cat > "${{ github.workspace }}/cqt/cqtdeployer" << 'WRAPPER'
         #!/bin/sh
-        BASE_DIR="$(cd "$(dirname "$0")/CQtDeployer" && pwd)"
+        BASE_DIR="$(cd "$(dirname "$0")/macos" && pwd)"
         export DYLD_LIBRARY_PATH="$BASE_DIR${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
         export DYLD_FRAMEWORK_PATH="$BASE_DIR${DYLD_FRAMEWORK_PATH:+:$DYLD_FRAMEWORK_PATH}"
         exec "$BASE_DIR/CQtDeployer" "$@"
