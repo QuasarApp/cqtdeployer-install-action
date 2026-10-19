@@ -11,11 +11,11 @@ Add the following step to your GitHub Actions workflow file (e.g., `.github/work
 
 ```yaml
 - name: Install CQtDeployer
-  uses: QuasarApp/cqtdeployer-install-action@v1.1.0
+  uses: QuasarApp/cqtdeployer-install-action@v1.2.1
 ```
 
 By default the step installs the latest stable **CQtDeployer** release.
-Starting with **v1.1.0** the downloaded release can be controlled with the
+Starting with **v1.2.1** the downloaded release can be controlled with the
 `latest` and `version` options (see [Options](#options)).
 
 
@@ -31,27 +31,10 @@ a specific release, set the `version` input to the desired release tag:
 
 ```yaml
 - name: Install a specific CQtDeployer version
-  uses: QuasarApp/cqtdeployer-install-action@v1.1.0
+  uses: QuasarApp/cqtdeployer-install-action@v1.2.1
   with:
     version: v1.6.2365
 ```
-
-> **Note:** `version` must be the exact GitHub release **tag** (for example
-> `v1.6.2365`). When `version` is set, the `latest` flag is ignored.
-
-> **macOS:** the CQtDeployer releases ship the macOS package as
-> `*_Darwin_arm64.zip` (a flat archive with the `CQtDeployer` executable, the
-> `CQtDeployer.sh` launcher, the dylibs and the `QtCore.framework`). The macOS
-> step follows the same rules as the other platforms: an exact `version` is
-> downloaded as is, and without a `version` the latest stable release is used.
-> Until the first stable macOS release is published, the latest mode will fail
-> with an error; set `version` to a release tag that ships the `Darwin_arm64`
-> package (for example the pre-release `v1.6.2504.659185d`) to install it in
-> the meantime. The executable is linked against its libraries via `@rpath`
-> without `LC_RPATH` entries, so the action installs a `cqtdeployer` wrapper
-> script (next to the package directory, because the macOS runner filesystem
-> is case-insensitive) that provides the `DYLD` search paths and puts it on
-> the `PATH`.
 
 ## Full Workflow Example
 Here is a complete example of how to use this action in a matrix build for both Linux and Windows:
@@ -87,7 +70,7 @@ jobs:
       #    To pin a specific release, set CQT_VERSION to the exact release
       #    tag (e.g. "v1.6.2365") or pass "version: <tag>" directly.
       - name: Setup CQtDeployer
-        uses: QuasarApp/cqtdeployer-install-action@v1.1.0
+        uses: QuasarApp/cqtdeployer-install-action@v1.2.1
         with:
           version: ${{ env.CQT_VERSION }}
 
