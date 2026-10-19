@@ -70,12 +70,14 @@ runs:
     - name: Download and Extract CQtDeployer macOS
       # The macOS package is released as *_Darwin_arm64.zip (a flat archive
       # with the CQtDeployer executable, the CQtDeployer.sh launcher, the
-      # dylibs and the QtCore.framework). The step follows the same rules as
-      # the other platforms: an exact "version" is downloaded as is (it must
+      # dylibs and the QtCore.framework). Like the Linux and Windows steps
+      # it is extracted directly into the cqt/ directory, so the package
+      # layout is the same on all platforms (issue #866 of
+      # QuasarApp/CQtDeployer). The step follows the same rules as the
+      # other platforms: an exact "version" is downloaded as is (it must
       # ship the Darwin zip asset), and without a "version" the latest
       # stable release is used. Until the first stable macOS release is
-      # published the latest mode will fail with an error (issue #866 of
-      # QuasarApp/CQtDeployer).
+      # published the latest mode will fail with an error.
       if: runner.os == 'macOS'
       uses: robinraju/release-downloader@v1
       with:
@@ -84,28 +86,27 @@ runs:
         tag: ${{ inputs.version }}
         fileName: '*_Darwin_arm64.zip'
         extract: true
-        out-file-path: ${{ github.workspace }}/cqt/CQtDeployer
+        out-file-path: ${{ github.workspace }}/cqt
 
     - name: Install CQtDeployer macOS
-      # The executable is linked against its dylibs and the QtCore
-      # framework via @rpath without any LC_RPATH entries, so a small
-      # "cqtdeployer" wrapper provides the DYLD search paths. The wrapper
-      # is created next to (not inside) the package directory, because the
-      # macOS runner filesystem is case-insensitive and a file named
-      # "cqtdeployer" cannot be created alongside the "CQtDeployer"
-      # executable (issue #866 of QuasarApp/CQtDeployer).
+      # The package is flat: the executable is cqt/CQtDeployer, right next
+      # to its dylibs and the QtCore.framework, exactly like the Windows
+      # layout (cqt/CQtDeployer.exe). The macOS runner filesystem is
+      # case-insensitive, so the "cqtdeployer" command used by the CI
+      # pipelines resolves to this executable directly, and no wrapper
+      # file named "cqtdeployer" can exist in cqt/ at all (on such a
+      # filesystem it would be the same name as the executable).
+      # The executable references its dylibs and the QtCore framework via
+      # @rpath without any LC_RPATH entries, so the @executable_path rpath
+      # is added to the extracted copy and an ad-hoc signature is applied,
+      # which makes it load its libraries from its own directory (issue
+      # #866 of QuasarApp/CQtDeployer).
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        pkg_dir="${{ github.workspace }}/cqt/CQtDeployer"
-        chmod +x "${pkg_dir}/CQtDeployer"
-        chmod +x "${pkg_dir}/CQtDeployer.sh"
-        cat > "${{ github.workspace }}/cqt/cqtdeployer" << 'WRAPPER'
-        #!/bin/sh
-        BASE_DIR="$(cd "$(dirname "$0")/CQtDeployer" && pwd)"
-        export DYLD_LIBRARY_PATH="$BASE_DIR${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
-        export DYLD_FRAMEWORK_PATH="$BASE_DIR${DYLD_FRAMEWORK_PATH:+:$DYLD_FRAMEWORK_PATH}"
-        exec "$BASE_DIR/CQtDeployer" "$@"
-        WRAPPER
-        chmod +x "${{ github.workspace }}/cqt/cqtdeployer"
+        pkg="${{ github.workspace }}/cqt/CQtDeployer"
+        chmod +x "$pkg"
+        chmod +x "${{ github.workspace }}/cqt/CQtDeployer.sh"
+        install_name_tool -add_rpath @executable_path "$pkg"
+        codesign --force --sign - "$pkg"
         echo "${{ github.workspace }}/cqt" >> "$GITHUB_PATH"
