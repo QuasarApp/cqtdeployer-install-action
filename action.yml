@@ -1,5 +1,5 @@
 name: 'Setup CQtDeployer'
-description: 'Downloads, extracts, and installs CQtDeployer for Linux (x64/ARM) and Windows'
+description: 'Downloads, extracts, and installs CQtDeployer for Linux (x64/ARM), Windows (x64) and macOS (ARM64)'
 
 inputs:
   latest:
@@ -66,3 +66,50 @@ runs:
         # Safely append to GITHUB_PATH in Windows using UTF-8 encoding
         $cqtPath = "${{ github.workspace }}\cqt"
         echo $cqtPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Resolve the CQtDeployer release tag for macOS
+      # The GitHub "latest release" endpoint ignores pre-releases, but the
+      # first CQtDeployer release that ships the macOS (Darwin arm64)
+      # package is a pre-release (issue #866 of QuasarApp/CQtDeployer).
+      # When no exact "version" is requested, resolve the newest release
+      # that ships the Darwin_arm64.zip asset from the release list.
+      if: runner.os == 'macOS'
+      id: macos-release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -n "${{ inputs.version }}" ]; then
+            # An exact release tag was requested, use it as is.
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            exit 0
+        fi
+        tag="$(gh api "repos/QuasarApp/CQtDeployer/releases?per_page=50" \
+            --jq '[.[] | select(.assets[].name | endswith("_Darwin_arm64.zip"))] | .[0].tag_name // empty')"
+        if [ -z "${tag}" ]; then
+            echo "::error::No CQtDeployer release with the Darwin_arm64.zip asset was found."
+            exit 1
+        fi
+        echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+        echo "Resolved the macOS release tag: ${tag}"
+
+    - name: Download and Extract CQtDeployer macOS
+      # The macOS release package is a flat archive: the CQtDeployer
+      # executable, the CQtDeployer.sh launcher and the Qt frameworks.
+      if: runner.os == 'macOS'
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: 'QuasarApp/CQtDeployer'
+        tag: ${{ steps.macos-release.outputs.tag }}
+        fileName: '*_Darwin_arm64.zip'
+        extract: true
+        out-file-path: ${{ github.workspace }}/cqt
+
+    - name: Install CQtDeployer macOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        chmod +x "${{ github.workspace }}/cqt/CQtDeployer"
+        chmod +x "${{ github.workspace }}/cqt/CQtDeployer.sh"
+        ln -s "${{ github.workspace }}/cqt/CQtDeployer.sh" "${{ github.workspace }}/cqt/cqtdeployer"
+        echo "${{ github.workspace }}/cqt" >> "$GITHUB_PATH"

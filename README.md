@@ -1,6 +1,6 @@
 # CQtDeployer Install Action
 
-A GitHub Action to automatically download, extract, and install **CQtDeployer** for Linux (x64 / ARM64) and Windows (x64) runners.
+A GitHub Action to automatically download, extract, and install **CQtDeployer** for Linux (x64 / ARM64), Windows (x64) and macOS (ARM64) runners.
 
 This action eliminates boilerplate code in your workflows, allowing you to install CQtDeployer with a single line of code across different operating systems and CPU architectures.
 
@@ -38,6 +38,14 @@ a specific release, set the `version` input to the desired release tag:
 
 > **Note:** `version` must be the exact GitHub release **tag** (for example
 > `v1.6.2365`). When `version` is set, the `latest` flag is ignored.
+
+> **macOS:** the CQtDeployer releases ship the macOS package as
+> `*_Darwin_arm64.zip` (a flat archive with the `CQtDeployer` executable, the
+> `CQtDeployer.sh` launcher and the Qt frameworks). The first release with the
+> macOS assets (`v1.6.2504.659185d`) is a pre-release, and the GitHub
+> "latest release" endpoint ignores pre-releases, so when `version` is not set
+> the action resolves the macOS tag by selecting the newest release that
+> ships the `Darwin_arm64` package.
 
 ## Full Workflow Example
 Here is a complete example of how to use this action in a matrix build for both Linux and Windows:
