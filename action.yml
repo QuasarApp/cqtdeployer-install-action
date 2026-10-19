@@ -95,7 +95,9 @@ runs:
 
     - name: Download and Extract CQtDeployer macOS
       # The macOS release package is a flat archive: the CQtDeployer
-      # executable, the CQtDeployer.sh launcher and the Qt frameworks.
+      # executable, the CQtDeployer.sh launcher, the dylibs and the
+      # QtCore.framework. It is extracted into its own directory so the
+      # "cqtdeployer" wrapper can live next to it (see the install step).
       if: runner.os == 'macOS'
       uses: robinraju/release-downloader@v1
       with:
@@ -103,13 +105,28 @@ runs:
         tag: ${{ steps.macos-release.outputs.tag }}
         fileName: '*_Darwin_arm64.zip'
         extract: true
-        out-file-path: ${{ github.workspace }}/cqt
+        out-file-path: ${{ github.workspace }}/cqt/CQtDeployer
 
     - name: Install CQtDeployer macOS
+      # The executable is linked against its dylibs and the QtCore
+      # framework via @rpath without any LC_RPATH entries, so a small
+      # "cqtdeployer" wrapper provides the DYLD search paths. The wrapper
+      # is created next to (not inside) the package directory, because the
+      # macOS runner filesystem is case-insensitive and a file named
+      # "cqtdeployer" cannot be created alongside the "CQtDeployer"
+      # executable (issue #866 of QuasarApp/CQtDeployer).
       if: runner.os == 'macOS'
       shell: bash
       run: |
-        chmod +x "${{ github.workspace }}/cqt/CQtDeployer"
-        chmod +x "${{ github.workspace }}/cqt/CQtDeployer.sh"
-        ln -s "${{ github.workspace }}/cqt/CQtDeployer.sh" "${{ github.workspace }}/cqt/cqtdeployer"
+        pkg_dir="${{ github.workspace }}/cqt/CQtDeployer"
+        chmod +x "${pkg_dir}/CQtDeployer"
+        chmod +x "${pkg_dir}/CQtDeployer.sh"
+        cat > "${{ github.workspace }}/cqt/cqtdeployer" << 'WRAPPER'
+        #!/bin/sh
+        BASE_DIR="$(cd "$(dirname "$0")/CQtDeployer" && pwd)"
+        export DYLD_LIBRARY_PATH="$BASE_DIR${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+        export DYLD_FRAMEWORK_PATH="$BASE_DIR${DYLD_FRAMEWORK_PATH:+:$DYLD_FRAMEWORK_PATH}"
+        exec "$BASE_DIR/CQtDeployer" "$@"
+        WRAPPER
+        chmod +x "${{ github.workspace }}/cqt/cqtdeployer"
         echo "${{ github.workspace }}/cqt" >> "$GITHUB_PATH"

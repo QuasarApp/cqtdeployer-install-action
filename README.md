@@ -41,11 +41,15 @@ a specific release, set the `version` input to the desired release tag:
 
 > **macOS:** the CQtDeployer releases ship the macOS package as
 > `*_Darwin_arm64.zip` (a flat archive with the `CQtDeployer` executable, the
-> `CQtDeployer.sh` launcher and the Qt frameworks). The first release with the
-> macOS assets (`v1.6.2504.659185d`) is a pre-release, and the GitHub
-> "latest release" endpoint ignores pre-releases, so when `version` is not set
-> the action resolves the macOS tag by selecting the newest release that
-> ships the `Darwin_arm64` package.
+> `CQtDeployer.sh` launcher, the dylibs and the `QtCore.framework`). The first
+> release with the macOS assets (`v1.6.2504.659185d`) is a pre-release, and the
+> GitHub "latest release" endpoint ignores pre-releases, so when `version` is
+> not set the action resolves the macOS tag by selecting the newest release
+> that ships the `Darwin_arm64` package. The executable is linked against its
+> libraries via `@rpath` without `LC_RPATH` entries, so the action installs a
+> `cqtdeployer` wrapper script (next to the package directory, because the
+> macOS runner filesystem is case-insensitive) that provides the `DYLD`
+> search paths and puts it on the `PATH`.
 
 ## Full Workflow Example
 Here is a complete example of how to use this action in a matrix build for both Linux and Windows:
