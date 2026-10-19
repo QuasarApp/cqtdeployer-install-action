@@ -1,5 +1,5 @@
 name: 'Setup CQtDeployer'
-description: 'Downloads, extracts, and installs CQtDeployer for Linux (x64/ARM) and Windows'
+description: 'Downloads, extracts, and installs CQtDeployer for Linux (x64/ARM), Windows (x64) and macOS (ARM64)'
 
 inputs:
   latest:
@@ -66,3 +66,46 @@ runs:
         # Safely append to GITHUB_PATH in Windows using UTF-8 encoding
         $cqtPath = "${{ github.workspace }}\cqt"
         echo $cqtPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Download and Extract CQtDeployer macOS
+      # The macOS package is released as *_Darwin_arm64.zip (a flat archive
+      # with the CQtDeployer executable, the CQtDeployer.sh launcher, the
+      # dylibs and the QtCore.framework). The step follows the same rules as
+      # the other platforms: an exact "version" is downloaded as is (it must
+      # ship the Darwin zip asset), and without a "version" the latest
+      # stable release is used. Until the first stable macOS release is
+      # published the latest mode will fail with an error (issue #866 of
+      # QuasarApp/CQtDeployer).
+      if: runner.os == 'macOS'
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: 'QuasarApp/CQtDeployer'
+        latest: ${{ inputs.version == '' && inputs.latest != 'false' }}
+        tag: ${{ inputs.version }}
+        fileName: '*_Darwin_arm64.zip'
+        extract: true
+        out-file-path: ${{ github.workspace }}/cqt/CQtDeployer
+
+    - name: Install CQtDeployer macOS
+      # The executable is linked against its dylibs and the QtCore
+      # framework via @rpath without any LC_RPATH entries, so a small
+      # "cqtdeployer" wrapper provides the DYLD search paths. The wrapper
+      # is created next to (not inside) the package directory, because the
+      # macOS runner filesystem is case-insensitive and a file named
+      # "cqtdeployer" cannot be created alongside the "CQtDeployer"
+      # executable (issue #866 of QuasarApp/CQtDeployer).
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        pkg_dir="${{ github.workspace }}/cqt/CQtDeployer"
+        chmod +x "${pkg_dir}/CQtDeployer"
+        chmod +x "${pkg_dir}/CQtDeployer.sh"
+        cat > "${{ github.workspace }}/cqt/cqtdeployer" << 'WRAPPER'
+        #!/bin/sh
+        BASE_DIR="$(cd "$(dirname "$0")/CQtDeployer" && pwd)"
+        export DYLD_LIBRARY_PATH="$BASE_DIR${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+        export DYLD_FRAMEWORK_PATH="$BASE_DIR${DYLD_FRAMEWORK_PATH:+:$DYLD_FRAMEWORK_PATH}"
+        exec "$BASE_DIR/CQtDeployer" "$@"
+        WRAPPER
+        chmod +x "${{ github.workspace }}/cqt/cqtdeployer"
+        echo "${{ github.workspace }}/cqt" >> "$GITHUB_PATH"
