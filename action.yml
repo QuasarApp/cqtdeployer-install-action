@@ -48,6 +48,17 @@ runs:
         # Set execution permissions and add to PATH
         chmod +x "${{ runner.temp }}/cqt/CQtDeployer.sh"
         chmod +x "${{ runner.temp }}/cqt/bin/CQtDeployer"
+        # The zip archive does not always preserve the executable bit of
+        # the bundled Qt Installer Framework tools (issue #872 of
+        # QuasarApp/CQtDeployer): binarycreator must be executable,
+        # otherwise cqtdeployer skips the QIF distribution and the .run
+        # installer is not created.
+        if [ -f "${{ runner.temp }}/cqt/QIF/binarycreator" ]; then
+          chmod +x "${{ runner.temp }}/cqt/QIF/binarycreator"
+        fi
+        if [ -f "${{ runner.temp }}/cqt/QIF/installerbase" ]; then
+          chmod +x "${{ runner.temp }}/cqt/QIF/installerbase"
+        fi
         ln -sf "${{ runner.temp }}/cqt/CQtDeployer.sh" "${{ runner.temp }}/cqt/cqtdeployer"
         echo "${{ runner.temp }}/cqt" >> $GITHUB_PATH
 
