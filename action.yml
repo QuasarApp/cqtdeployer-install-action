@@ -104,6 +104,17 @@ runs:
         pkg="${{ runner.temp }}/cqt/CQtDeployer"
         chmod +x "$pkg"
         chmod +x "${{ runner.temp }}/cqt/CQtDeployer.sh"
+        # The zip archive does not always preserve the executable bit of
+        # the bundled Qt Installer Framework tools (issue #872 of
+        # QuasarApp/CQtDeployer): binarycreator must be executable,
+        # otherwise cqtdeployer skips the QIF distribution and the QIFW
+        # installer is not created (issue #884 of QuasarApp/CQtDeployer).
+        if [ -f "${{ runner.temp }}/cqt/QIF/binarycreator" ]; then
+          chmod +x "${{ runner.temp }}/cqt/QIF/binarycreator"
+        fi
+        if [ -f "${{ runner.temp }}/cqt/QIF/installerbase" ]; then
+          chmod +x "${{ runner.temp }}/cqt/QIF/installerbase"
+        fi
         install_name_tool -add_rpath @executable_path "$pkg"
         codesign --force --sign - "$pkg"
         echo "${{ runner.temp }}/cqt" >> "$GITHUB_PATH"
