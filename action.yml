@@ -59,6 +59,16 @@ runs:
         if [ -f "${{ runner.temp }}/cqt/QIF/installerbase" ]; then
           chmod +x "${{ runner.temp }}/cqt/QIF/installerbase"
         fi
+        # The same rule for the bundled AppImage tools (issue #898 of
+        # QuasarApp/CQtDeployer): appimagetool must be executable,
+        # otherwise cqtdeployer cannot find the tool and the appimage
+        # distribution is skipped (the AppImage package is not created).
+        if [ -f "${{ runner.temp }}/cqt/AppImage/appimagetool" ]; then
+          chmod +x "${{ runner.temp }}/cqt/AppImage/appimagetool"
+        fi
+        if [ -f "${{ runner.temp }}/cqt/AppImage/appimagetool.AppImage" ]; then
+          chmod +x "${{ runner.temp }}/cqt/AppImage/appimagetool.AppImage"
+        fi
         ln -sf "${{ runner.temp }}/cqt/CQtDeployer.sh" "${{ runner.temp }}/cqt/cqtdeployer"
         echo "${{ runner.temp }}/cqt" >> $GITHUB_PATH
 
