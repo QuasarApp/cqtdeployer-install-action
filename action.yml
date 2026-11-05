@@ -29,6 +29,10 @@ runs:
         out-file-path: ${{ runner.temp }}/cqt
 
     # Download and Extract CQtDeployer Linux ARM
+    # The CQtDeployer release assets keep the CMAKE_SYSTEM_PROCESSOR
+    # name in the arch part of the file name (issue #918 of
+    # QuasarApp/CQtDeployer), so the Linux ARM (aarch64) zip is
+    # CQtDeployer_<version>_Linux_aarch64.zip.
     - name: Download and Extract CQtDeployer Linux ARM
       if: runner.os == 'Linux' && runner.arch == 'ARM64'
       uses: robinraju/release-downloader@v1
@@ -36,7 +40,7 @@ runs:
         repository: 'QuasarApp/CQtDeployer'
         latest: ${{ inputs.version == '' && inputs.latest != 'false' }}
         tag: ${{ inputs.version }}
-        fileName: '*_Linux_ARM64.zip'
+        fileName: '*_Linux_aarch64.zip'
         extract: true
         out-file-path: ${{ runner.temp }}/cqt
 
