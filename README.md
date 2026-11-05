@@ -15,8 +15,7 @@ Add the following step to your GitHub Actions workflow file (e.g., `.github/work
 ```
 
 By default the step installs the latest stable **CQtDeployer** release.
-Starting with **v1.3.0** the downloaded release can be controlled with the
-`latest` and `version` options (see [Options](#options)).
+The downloaded release can be controlled with the `latest` and `version` options (see [Options](#options)).
 
 
 ## Options
