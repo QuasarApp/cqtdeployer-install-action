@@ -11,12 +11,11 @@ Add the following step to your GitHub Actions workflow file (e.g., `.github/work
 
 ```yaml
 - name: Install CQtDeployer
-  uses: QuasarApp/cqtdeployer-install-action@v1.2.1
+  uses: QuasarApp/cqtdeployer-install-action@v1.3.0
 ```
 
 By default the step installs the latest stable **CQtDeployer** release.
-Starting with **v1.2.1** the downloaded release can be controlled with the
-`latest` and `version` options (see [Options](#options)).
+The downloaded release can be controlled with the `latest` and `version` options (see [Options](#options)).
 
 
 ## Options
@@ -24,7 +23,7 @@ Starting with **v1.2.1** the downloaded release can be controlled with the
 | Option    | Type    | Default   | Description |
 |-----------|---------|-----------|-------------|
 | `latest`  | boolean | `true`    | Download the latest stable release. Only consulted when `version` is not set. |
-| `version` | string  | *(empty)* | Download a specific release tag instead of the latest release, e.g. `v1.6.2365`. When set, it takes precedence over `latest`. |
+| `version` | string  | *(empty)* | Download a specific release tag instead of the latest release, e.g. `v1.7.73.5df21f5f`. When set, it takes precedence over `latest`. |
 
 By default the action downloads the latest stable **CQtDeployer** release. To pin
 a specific release, set the `version` input to the desired release tag:
@@ -32,6 +31,8 @@ a specific release, set the `version` input to the desired release tag:
 ```yaml
 - name: Install a specific CQtDeployer version
   uses: QuasarApp/cqtdeployer-install-action@v1.3.0
+  with:
+    version: 'v1.7.73.5df21f5f'
 ```
 
 ## Full Workflow Example
@@ -66,9 +67,9 @@ jobs:
       # 1. Install CQtDeployer using this custom action.
       #    With an empty CQT_VERSION the latest stable release is installed.
       #    To pin a specific release, set CQT_VERSION to the exact release
-      #    tag (e.g. "v1.6.2365") or pass "version: <tag>" directly.
+      #    tag (e.g. "v1.7.73.5df21f5f") or pass "version: <tag>" directly.
       - name: Setup CQtDeployer
-        uses: QuasarApp/cqtdeployer-install-action@v1.2.1
+        uses: QuasarApp/cqtdeployer-install-action@v1.3.0
         with:
           version: ${{ env.CQT_VERSION }}
 
