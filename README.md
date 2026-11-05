@@ -31,9 +31,7 @@ a specific release, set the `version` input to the desired release tag:
 
 ```yaml
 - name: Install a specific CQtDeployer version
-  uses: QuasarApp/cqtdeployer-install-action@v1.2.1
-  with:
-    version: v1.6.2365
+  uses: QuasarApp/cqtdeployer-install-action@v1.3.0
 ```
 
 ## Full Workflow Example
@@ -51,7 +49,7 @@ on:
 
 env:
   # Leave empty to install the latest stable release,
-  # or set an exact release tag (e.g. "v1.6.2365") to pin the version.
+  # or set an exact release tag (e.g. "v1.7.73.5df21f5f") to pin the version.
   CQT_VERSION: ""
 
 jobs:
